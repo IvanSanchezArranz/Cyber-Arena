@@ -123,6 +123,9 @@ export class GameManager {
       this.weaponSystem,
       this.sceneBuilder.getObstacles()
     );
+    // Safety Lock: Remove drone mesh from scene on boot so start screen is clean, and set to dead
+    this.scene.remove(this.enemy.mesh);
+    this.enemy.isDead = true;
 
     // 5. TargetManager for Shooting Gallery Mode
     this.targetManager = new TargetManager(this.scene);
@@ -142,13 +145,17 @@ export class GameManager {
       this.timeLeft = 60.0; // 60s practice countdown
       this.player.score = 0;
       this.targetManager.clearAll();
-      // Remove enemy drone from scene
+      
+      // Explicitly lock drone to dead and remove it completely in Gallery
+      this.enemy.isDead = true;
       this.scene.remove(this.enemy.mesh);
+      
       // Reposition player at Z=0 (perfect spacing of 12m, 22m, and 32m to the target rails)
       this.player.position.set(0, 1.8, 0);
       this.player.rotation.set(0, Math.PI, 0, "YXZ");
     } else {
       // Re-add enemy drone if we are in Arena mode
+      this.enemy.isDead = false;
       this.enemy.respawn(1.0);
       // Reposition player at standard arena coordinates
       this.player.position.set(0, 1.8, 25);
