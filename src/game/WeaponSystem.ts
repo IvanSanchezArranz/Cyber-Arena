@@ -148,14 +148,16 @@ export class WeaponSystem {
         }
       }
 
-      // D. Collision with Targets (if player projectile in Shooting Gallery, distance-based)
+      // D. Collision with Targets (if player projectile in Shooting Gallery, segment-to-point physics)
       if (proj.isPlayerOwned && targets.length > 0) {
         for (let j = 0; j < targets.length; j++) {
           const targetPos = targets[j].position;
-          const dist = proj.mesh.position.distanceTo(targetPos);
+          
+          // Calculate the closest distance from the target center to the entire linear segment traveled in this frame
+          const dist = this.getDistanceToSegment(targetPos, prevPosition, proj.mesh.position);
 
-          // If laser is close to target (within 1.15m: 0.55m orb radius + padding)
-          if (dist < 1.15) {
+          // If the laser path passes within 0.85m of target center (0.55m orb radius + 0.3m padding)
+          if (dist < 0.85) {
             onTargetHit(targets[j].uuid);
             sounds.playEnemyDamageBeep();
             this.createExplosionSparks(proj.mesh.position, 0xffaa00); // Orange glowing sparks
@@ -195,6 +197,26 @@ export class WeaponSystem {
         this.particles.splice(i, 1);
       }
     }
+  }
+
+  /**
+   * Calculates the closest distance from point C to the line segment [A, B].
+   * This completely prevents bullet tunneling through moving target spheres.
+   */
+  private getDistanceToSegment(C: THREE.Vector3, A: THREE.Vector3, B: THREE.Vector3): number {
+    const AB = new THREE.Vector3().subVectors(B, A);
+    const AC = new THREE.Vector3().subVectors(C, A);
+
+    const ab2 = AB.dot(AB);
+    if (ab2 === 0) return C.distanceTo(A);
+
+    // Project point C onto line segment AB, clamping to [0, 1] range
+    let t = AC.dot(AB) / ab2;
+    t = Math.max(0, Math.min(1, t));
+
+    // Calculate projection point
+    const projection = A.clone().add(AB.multiplyScalar(t));
+    return C.distanceTo(projection);
   }
 
   private destroyProjectile(index: number) {
