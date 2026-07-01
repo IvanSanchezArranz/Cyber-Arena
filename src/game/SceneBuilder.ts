@@ -71,7 +71,6 @@ export class SceneBuilder {
     this.createBoundaryWalls(0x42381f, 0xffaa00); // Yellow/Orange glowing range tunnel
     this.createGalleryRangeWall();
     this.createGalleryBooth();
-    this.createGalleryRails();
   }
 
   private createGalleryBooth() {
@@ -115,43 +114,6 @@ export class SceneBuilder {
     const trimR = trimL.clone();
     trimR.position.set(1.78, 2.45, 1.5);
     this.environmentGroup.add(trimR);
-  }
-
-  private createGalleryRails() {
-    // 3 Physical Steel Slide Rails (Tracks) extending across the room (X = -20 to 20)
-    const railGeo = new THREE.BoxGeometry(40, 0.08, 0.08);
-    const railMat = new THREE.MeshStandardMaterial({
-      color: 0x888899,
-      roughness: 0.1,
-      metalness: 0.9
-    });
-
-    const railsCoords = [
-      { z: -12, y: 1.5 },
-      { z: -22, y: 2.8 },
-      { z: -32, y: 4.2 }
-    ];
-
-    railsCoords.forEach((rc) => {
-      const railMesh = new THREE.Mesh(railGeo, railMat);
-      railMesh.position.set(0, rc.y, rc.z);
-      railMesh.castShadow = true;
-      railMesh.receiveShadow = true;
-      this.environmentGroup.add(railMesh);
-
-      // Support pillar posts on left/right edges of each rail
-      const supportGeo = new THREE.CylinderGeometry(0.08, 0.08, rc.y, 8);
-      const supportMat = new THREE.MeshStandardMaterial({ color: 0x33333d, metalness: 0.8 });
-      
-      const leftPost = new THREE.Mesh(supportGeo, supportMat);
-      leftPost.position.set(-20, rc.y / 2, rc.z);
-      leftPost.castShadow = true;
-      this.environmentGroup.add(leftPost);
-
-      const rightPost = leftPost.clone();
-      rightPost.position.set(20, rc.y / 2, rc.z);
-      this.environmentGroup.add(rightPost);
-    });
   }
 
   /* =========================================================================
