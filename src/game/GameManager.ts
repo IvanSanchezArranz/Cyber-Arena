@@ -144,8 +144,8 @@ export class GameManager {
       this.targetManager.clearAll();
       // Remove enemy drone from scene
       this.scene.remove(this.enemy.mesh);
-      // Reposition player at start of the range looking down the tunnel
-      this.player.position.set(0, 1.8, 30);
+      // Reposition player at Z=0 (perfect spacing of 12m, 22m, and 32m to the target rails)
+      this.player.position.set(0, 1.8, 0);
       this.player.rotation.set(0, Math.PI, 0, "YXZ");
     } else {
       // Re-add enemy drone if we are in Arena mode
@@ -219,11 +219,6 @@ export class GameManager {
 
     // 1. Update Player Controls
     this.player.update(deltaTime);
-
-    // Sync blaster position
-    const gunTargetPos = this.camera.position.clone();
-    this.player.gunMesh.position.copy(gunTargetPos);
-    this.player.gunMesh.rotation.copy(this.camera.rotation);
 
     // 2. Mode-Specific updates
     if (this.gameMode === "ARENA") {

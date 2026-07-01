@@ -1,82 +1,156 @@
 import * as THREE from "three";
 
 export interface TargetData {
-  mesh: THREE.Mesh;
+  mesh: THREE.Group; // Group containing the circular bullseye and the vertical support post
   box: THREE.Box3;
-  timer: number;
+  railZ: number;      // Distance plane (Z coordinate)
+  railY: number;      // Vertical height of the rail (Y coordinate)
+  direction: number;  // -1 (moving left) or 1 (moving right)
+  speed: number;      // movement velocity
 }
 
 export class TargetManager {
   private scene: THREE.Scene;
   public targets: TargetData[] = [];
   private spawnTimer = 0;
-  private arenaSize = 70; // Keep slightly within the 80x80 arena bounds
+  private maxTargets = 8;
+
+  // Real-life range configuration
+  private rails = [
+    { z: -12, y: 1.5, speed: 4.5 }, // Near Rail (fast targets, low height)
+    { z: -22, y: 2.8, speed: 3.5 }, // Medium Rail (medium targets, medium height)
+    { z: -32, y: 4.2, speed: 2.2 }, // Far Rail (slow targets, high height)
+  ];
 
   constructor(scene: THREE.Scene) {
     this.scene = scene;
   }
 
   public update(deltaTime: number) {
-    // 1. Spawn new targets periodically
-    this.spawnTimer -= deltaTime;
-    if (this.spawnTimer <= 0) {
-      this.spawnTarget();
-      this.spawnTimer = Math.random() * 0.8 + 0.4; // Rapid spawn rate (0.4s to 1.2s)
+    // 1. Keep the gallery populated with targets up to our limit
+    if (this.targets.length < this.maxTargets) {
+      this.spawnTimer -= deltaTime;
+      if (this.spawnTimer <= 0) {
+        this.spawnGalleryTarget();
+        this.spawnTimer = Math.random() * 0.5 + 0.3; // Rapid populate
+      }
     }
 
-    // 2. Animate and despawn old targets
+    // 2. Slide targets along their respective tracks
     for (let i = this.targets.length - 1; i >= 0; i--) {
       const t = this.targets[i];
-      t.timer -= deltaTime;
       
-      // Floating animation
-      t.mesh.rotation.x += deltaTime * 2.0;
-      t.mesh.rotation.y += deltaTime * 3.0;
-      t.mesh.position.y += Math.sin(Date.now() * 0.005 + i) * 0.02; 
-      
-      // Update collision bounds
+      // Move horizontally
+      t.mesh.position.x += t.direction * t.speed * deltaTime;
+
+      // Rotate the target disc slightly for an organic mechanical wobble
+      const wobble = Math.sin(Date.now() * 0.005 + i) * 0.05;
+      t.mesh.rotation.y = wobble;
+
+      // Update collision bounding box
       t.box.setFromObject(t.mesh);
 
-      // Despawn if time runs out
-      if (t.timer <= 0) {
-        this.removeTarget(i);
+      // Bounce/Reverse direction if target hits horizontal boundary walls (X = -20 to +20)
+      if (t.mesh.position.x > 20) {
+        t.mesh.position.x = 20;
+        t.direction = -1; // Move left
+      } else if (t.mesh.position.x < -20) {
+        t.mesh.position.x = -20;
+        t.direction = 1; // Move right
       }
     }
   }
 
-  private spawnTarget() {
-    // Create a bright orange glowing octahedron
-    const geo = new THREE.OctahedronGeometry(0.8, 0);
-    const mat = new THREE.MeshStandardMaterial({
-      color: 0xffaa00,
-      roughness: 0.1,
-      metalness: 0.9,
-      emissive: 0xff5500,
-      emissiveIntensity: 0.8
+  private spawnGalleryTarget() {
+    const group = new THREE.Group();
+
+    // Select a random rail track for this target
+    const railIdx = Math.floor(Math.random() * this.rails.length);
+    const rail = this.rails[railIdx];
+
+    // 1. Vertical support post (mechanical metal leg)
+    const postGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.8, 6);
+    const postMat = new THREE.MeshStandardMaterial({
+      color: 0x55555f,
+      roughness: 0.5,
+      metalness: 0.8,
     });
-    const mesh = new THREE.Mesh(geo, mat);
+    const post = new THREE.Mesh(postGeo, postMat);
+    post.position.set(0, -0.4, 0); // Position below the target disc center
+    group.add(post);
 
-    // Spawn at random coordinates inside the arena, avoiding the exact center spawn
-    let x = 0;
-    let z = 0;
-    while (Math.abs(x) < 5 && Math.abs(z) < 5) {
-      x = (Math.random() - 0.5) * this.arenaSize;
-      z = (Math.random() - 0.5) * this.arenaSize;
-    }
-    const y = Math.random() * 8 + 2; // Height between 2 and 10m
+    // 2. Circular Bullseye plate
+    const outerGeo = new THREE.CylinderGeometry(0.5, 0.5, 0.05, 16);
+    outerGeo.rotateX(Math.PI / 2); // Rotate to face player directly
+    const outerMat = new THREE.MeshStandardMaterial({
+      color: 0xff0000, // Red outer ring
+      roughness: 0.2,
+      metalness: 0.5,
+    });
+    const targetOuter = new THREE.Mesh(outerGeo, outerMat);
+    group.add(targetOuter);
 
-    mesh.position.set(x, y, z);
-    this.scene.add(mesh);
+    const innerGeo = new THREE.CylinderGeometry(0.3, 0.3, 0.06, 16);
+    innerGeo.rotateX(Math.PI / 2);
+    const innerMat = new THREE.MeshStandardMaterial({
+      color: 0xffea00, // Yellow inner ring
+      roughness: 0.2,
+      metalness: 0.5,
+    });
+    const targetInner = new THREE.Mesh(innerGeo, innerMat);
+    group.add(targetInner);
 
-    const box = new THREE.Box3().setFromObject(mesh);
-    this.targets.push({ mesh, box, timer: 3.5 }); // Targets exist for only 3.5 seconds
+    const bullseyeGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.07, 16);
+    bullseyeGeo.rotateX(Math.PI / 2);
+    const bullseyeMat = new THREE.MeshStandardMaterial({
+      color: 0xffffff, // White center bullseye
+      roughness: 0.1,
+      metalness: 0.3,
+    });
+    const bullseye = new THREE.Mesh(bullseyeGeo, bullseyeMat);
+    group.add(bullseye);
+
+    // 3. Set spawn coordinates exactly on the track
+    const spawnX = (Math.random() - 0.5) * 36; // Spawn between -18 and +18 on X
+    group.position.set(spawnX, rail.y + 0.4, rail.z); // Offset Y slightly to sit post on track
+
+    // Enable shadows for the entire target group
+    group.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        child.castShadow = true;
+        child.receiveShadow = true;
+      }
+    });
+
+    this.scene.add(group);
+
+    const box = new THREE.Box3().setFromObject(group);
+
+    this.targets.push({
+      mesh: group,
+      box,
+      railZ: rail.z,
+      railY: rail.y,
+      direction: Math.random() < 0.5 ? -1 : 1, // Random starting direction
+      speed: rail.speed * (Math.random() * 0.4 + 0.8), // Add subtle speed variance (+/- 20%)
+    });
   }
 
   public removeTarget(index: number) {
     const t = this.targets[index];
     this.scene.remove(t.mesh);
-    t.mesh.geometry.dispose();
-    (t.mesh.material as THREE.Material).dispose();
+
+    t.mesh.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        child.geometry.dispose();
+        if (Array.isArray(child.material)) {
+          child.material.forEach((m) => m.dispose());
+        } else if (child.material) {
+          child.material.dispose();
+        }
+      }
+    });
+
     this.targets.splice(index, 1);
   }
 
