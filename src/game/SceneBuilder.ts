@@ -26,7 +26,7 @@ export class SceneBuilder {
    * Memory-safe clearing of previous 3D models to prevent GPU memory leaks
    */
   public clear() {
-    this.obstacles = [];
+    this.obstacles.length = 0; // Clears the array in-place, keeping the controller references intact!
     
     while (this.environmentGroup.children.length > 0) {
       const obj = this.environmentGroup.children[0];
