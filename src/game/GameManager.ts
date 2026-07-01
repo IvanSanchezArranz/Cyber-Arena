@@ -253,7 +253,9 @@ export class GameManager {
     }
 
     // 3. Update Weapon Projectiles & Particles
-    const targetBoxes = this.gameMode === "GALLERY" ? this.targetManager.targets.map(t => t.box) : [];
+    const targetsList = this.gameMode === "GALLERY" 
+      ? this.targetManager.targets.map(t => ({ uuid: t.mesh.uuid, box: t.box })) 
+      : [];
     
     this.weaponSystem.update(
       deltaTime,
@@ -284,17 +286,17 @@ export class GameManager {
           }
         }
       },
-      (targetIndex) => {
-        // Target is shot (only in Gallery)
+      (targetUUID) => {
+        // Target is shot (only in Gallery, safe UUID lookups)
         if (this.gameMode === "GALLERY") {
-          this.targetManager.removeTarget(targetIndex);
+          this.targetManager.removeTargetByUUID(targetUUID);
           this.player.score += 100; // 100 points per target hit
           this.syncUI();
         }
       },
       this.player.position,
       (this.gameMode === "ARENA" && !this.enemy.isDead) ? this.enemy.getBoundingBox() : null,
-      targetBoxes
+      targetsList
     );
 
     // 4. Render Frame

@@ -89,10 +89,10 @@ export class WeaponSystem {
     deltaTime: number,
     onPlayerHit: (damage: number) => void,
     onEnemyHit: (damage: number) => void,
-    onTargetHit: (index: number) => void,
+    onTargetHit: (uuid: string) => void,
     playerPosition: THREE.Vector3,
     enemyBoundingBox: THREE.Box3 | null,
-    targetBoxes: THREE.Box3[]
+    targets: { uuid: string; box: THREE.Box3 }[]
   ) {
     // 1. Update Projectiles
     for (let i = this.projectiles.length - 1; i >= 0; i--) {
@@ -149,13 +149,13 @@ export class WeaponSystem {
       }
 
       // D. Collision with Targets (if player projectile in Shooting Gallery)
-      if (proj.isPlayerOwned && targetBoxes.length > 0) {
+      if (proj.isPlayerOwned && targets.length > 0) {
         // Compute projectile bounding box to prevent fast laser tunneling
         const projBox = new THREE.Box3().setFromObject(proj.mesh);
         
-        for (let j = 0; j < targetBoxes.length; j++) {
-          if (projBox.intersectsBox(targetBoxes[j])) {
-            onTargetHit(j);
+        for (let j = 0; j < targets.length; j++) {
+          if (projBox.intersectsBox(targets[j].box)) {
+            onTargetHit(targets[j].uuid);
             sounds.playEnemyDamageBeep();
             this.createExplosionSparks(proj.mesh.position, 0xffaa00); // Orange glowing sparks
             this.destroyProjectile(i);

@@ -139,6 +139,8 @@ export class TargetManager {
 
   public removeTarget(index: number) {
     const t = this.targets[index];
+    if (!t) return; // Robustness Guard: Prevents crashes on index-shifts
+
     this.scene.remove(t.mesh);
 
     t.mesh.traverse((child) => {
@@ -153,6 +155,17 @@ export class TargetManager {
     });
 
     this.targets.splice(index, 1);
+  }
+
+  /**
+   * Safe, race-condition proof removal of a target by its unique Three.js UUID.
+   * This completely prevents array index-shift crashes during multi-shot frames.
+   */
+  public removeTargetByUUID(uuid: string) {
+    const idx = this.targets.findIndex((t) => t.mesh.uuid === uuid);
+    if (idx !== -1) {
+      this.removeTarget(idx);
+    }
   }
 
   public clearAll() {
