@@ -9,7 +9,7 @@ export class PlayerController {
 
   // Player State
   public position = new THREE.Vector3(0, 1.8, 25); // Player eye height around 1.8m, spawn at Z=25
-  public rotation = new THREE.Euler(0, Math.PI, 0, "YXZ"); // Start looking North (towards Z=0)
+  public rotation = new THREE.Euler(0, 0, 0, "YXZ"); // Start looking North (towards Z=0)
   public health = 100;
   public shield = 100;
   public score = 0;
@@ -151,7 +151,7 @@ export class PlayerController {
 
   public reset() {
     this.position.set(0, 1.8, 25);
-    this.rotation.set(0, Math.PI, 0, "YXZ");
+    this.rotation.set(0, 0, 0, "YXZ"); // Align looking North
     this.health = 100;
     this.shield = 100;
     this.score = 0;

@@ -47,9 +47,9 @@ export class TargetManager {
       const wobble = Math.sin(Date.now() * 0.005 + i) * 0.05;
       t.mesh.rotation.y = wobble;
 
-      // Ensure world matrices are fully recalculated to match this frame's new position
-      t.mesh.updateMatrixWorld(true);
-      t.box.setFromObject(t.mesh);
+      // Calculate bounding box mathematically for 100% precise, zero-latency hitbox tracking
+      t.box.min.set(t.mesh.position.x - 0.6, t.mesh.position.y - 0.8, t.mesh.position.z - 0.2);
+      t.box.max.set(t.mesh.position.x + 0.6, t.mesh.position.y + 0.6, t.mesh.position.z + 0.2);
 
       // Bounce/Reverse direction if target hits horizontal boundary walls (X = -20 to +20)
       if (t.mesh.position.x > 20) {

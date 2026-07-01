@@ -152,14 +152,14 @@ export class GameManager {
       
       // Reposition player at Z=0 (perfect spacing of 12m, 22m, and 32m to the target rails)
       this.player.position.set(0, 1.8, 0);
-      this.player.rotation.set(0, Math.PI, 0, "YXZ");
+      this.player.rotation.set(0, 0, 0, "YXZ"); // Align looking North (towards negative Z)
     } else {
       // Re-add enemy drone if we are in Arena mode
       this.enemy.isDead = false;
       this.enemy.respawn(1.0);
       // Reposition player at standard arena coordinates
       this.player.position.set(0, 1.8, 25);
-      this.player.rotation.set(0, Math.PI, 0, "YXZ");
+      this.player.rotation.set(0, 0, 0, "YXZ"); // Align looking North
     }
 
     this.renderer.setAnimationLoop(this.tick);
