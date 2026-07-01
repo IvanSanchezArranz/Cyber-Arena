@@ -7,12 +7,16 @@ interface HUDOverlayProps {
   playerScore: number;
   enemyHealth: number;
   enemyState: string;
-  gameStatus: "START" | "PLAYING" | "PAUSED" | "GAMEOVER" | "VICTORY";
+  gameStatus: "START" | "PLAYING" | "PAUSED" | "GAMEOVER" | "VICTORY" | "TIMEOUT";
+  gameMode: "ARENA" | "GALLERY";
+  timeLeft: number;
+  highScore: number;
   droneKills: number;
   playerX: number;
   playerZ: number;
   enemyX: number;
   enemyZ: number;
+  targetsPos: { x: number; z: number }[];
   isMuted: boolean;
   onToggleMute: () => void;
 }
@@ -24,11 +28,15 @@ export const HUDOverlay: React.FC<HUDOverlayProps> = ({
   enemyHealth,
   enemyState,
   gameStatus,
+  gameMode,
+  timeLeft,
+  highScore,
   droneKills,
   playerX,
   playerZ,
   enemyX,
   enemyZ,
+  targetsPos,
   isMuted,
   onToggleMute,
 }) => {
@@ -63,40 +71,96 @@ export const HUDOverlay: React.FC<HUDOverlayProps> = ({
                 className="radar-blip player"
                 style={{ left: `${pRadarX}px`, top: `${pRadarY}px` }}
               ></div>
-              {/* Enemy dot (only if not destroyed) */}
-              {enemyState !== "DESTROYED" && (
+              
+              {/* Enemy dot (only in Arena mode if not destroyed) */}
+              {gameMode === "ARENA" && enemyState !== "DESTROYED" && (
                 <div
                   className="radar-blip enemy"
                   style={{ left: `${eRadarX}px`, top: `${eRadarY}px` }}
                 ></div>
               )}
+
+              {/* Dynamic Targets dots (only in Gallery mode) */}
+              {gameMode === "GALLERY" && targetsPos.map((t, idx) => {
+                const tRadarX = mapCoordToRadar(t.x);
+                const tRadarY = mapCoordToRadar(t.z);
+                return (
+                  <div
+                    key={idx}
+                    className="radar-blip"
+                    style={{
+                      left: `${tRadarX}px`,
+                      top: `${tRadarY}px`,
+                      backgroundColor: "#ffaa00",
+                      boxShadow: "0 0 6px #ffaa00",
+                      animation: "pulse-blip 0.8s infinite alternate",
+                      width: "5px",
+                      height: "5px"
+                    }}
+                  ></div>
+                );
+              })}
             </div>
           </div>
 
           {/* OBJECTIVE */}
-          <div className="cyber-panel objective-panel">
-            <span className="obj-header">TACTICAL GRID OVERRIDE</span>
-            <span className="obj-desc">ELIMINATE THE HEAVY GUARD DRONE ({droneKills} / 5)</span>
+          <div className="cyber-panel objective-panel" style={{ borderColor: gameMode === "GALLERY" ? "rgba(255, 234, 0, 0.3)" : "rgba(0, 255, 255, 0.3)" }}>
+            {gameMode === "ARENA" ? (
+              <>
+                <span className="obj-header">TACTICAL GRID OVERRIDE</span>
+                <span className="obj-desc">ELIMINATE THE HEAVY GUARD DRONE ({droneKills} / 5)</span>
+              </>
+            ) : (
+              <>
+                <span className="obj-header" style={{ color: "var(--neon-yellow)" }}>AIM WARMUP TARGETS</span>
+                <span className="obj-desc">DESTROY THE FLOATING NODES ({playerScore / 100} HIT)</span>
+              </>
+            )}
           </div>
 
-          {/* ENEMY MONITOR */}
-          <div className="cyber-panel enemy-panel">
-            <div className="panel-title">
-              <span>TARGET SIG: G-DRONE v2</span>
-              <span className={`enemy-state-badge ${enemyState.toLowerCase()}`}>
-                {enemyState}
-              </span>
+          {/* DYNAMIC METRIC TIMER OR ENEMY MONITOR */}
+          {gameMode === "ARENA" ? (
+            <div className="cyber-panel enemy-panel">
+              <div className="panel-title">
+                <span>TARGET SIG: G-DRONE v2</span>
+                <span className={`enemy-state-badge ${enemyState.toLowerCase()}`}>
+                  {enemyState}
+                </span>
+              </div>
+              <div className="cyber-bar-container">
+                <div
+                  className="cyber-bar enemy-hp"
+                  style={{ width: `${enemyHealth}%` }}
+                ></div>
+              </div>
+              <div className="panel-title" style={{ fontSize: "11px", justifyContent: "flex-end" }}>
+                HP: {enemyHealth}%
+              </div>
             </div>
-            <div className="cyber-bar-container">
-              <div
-                className="cyber-bar enemy-hp"
-                style={{ width: `${enemyHealth}%` }}
-              ></div>
+          ) : (
+            <div className="cyber-panel enemy-panel" style={{ borderColor: "rgba(255, 234, 0, 0.3)" }}>
+              <div className="panel-title">
+                <span style={{ color: "var(--neon-yellow)" }}>CHRONO TIME REMAINING</span>
+                <span style={{ color: "var(--neon-yellow)", fontWeight: "bold" }}>
+                  {Math.ceil(timeLeft)}s
+                </span>
+              </div>
+              <div className="cyber-bar-container" style={{ borderColor: "rgba(255, 234, 0, 0.2)" }}>
+                <div
+                  className="cyber-bar"
+                  style={{
+                    width: `${(timeLeft / 60) * 100}%`,
+                    background: "linear-gradient(90deg, #ff9900, #ffea00)",
+                    boxShadow: "0 0 10px rgba(255, 234, 0, 0.4)"
+                  }}
+                ></div>
+              </div>
+              <div className="panel-title" style={{ fontSize: "11px", justifyContent: "space-between", marginTop: "2px" }}>
+                <span style={{ color: "rgba(255, 255, 255, 0.4)" }}>RECORD: {highScore} PTS</span>
+                <span style={{ color: "var(--neon-yellow)" }}>CHRONO TIMER</span>
+              </div>
             </div>
-            <div className="panel-title" style={{ fontSize: "11px", justifyContent: "flex-end" }}>
-              HP: {enemyHealth}%
-            </div>
-          </div>
+          )}
         </div>
 
         {/* --- HUD CENTER CROSSHAIR --- */}
@@ -137,18 +201,22 @@ export const HUDOverlay: React.FC<HUDOverlayProps> = ({
           </div>
 
           {/* PLAYER STATS & AMMO */}
-          <div className="cyber-panel stats-panel">
+          <div className="cyber-panel stats-panel" style={{ borderColor: gameMode === "GALLERY" ? "rgba(255, 234, 0, 0.3)" : "rgba(0, 255, 255, 0.3)" }}>
             <div className="stat-item">
-              <span>PILOT SCORE:</span>
-              <span>{playerScore}</span>
+              <span style={{ color: gameMode === "GALLERY" ? "rgba(255, 234, 0, 0.5)" : "rgba(255, 255, 255, 0.5)" }}>
+                {gameMode === "ARENA" ? "PILOT SCORE:" : "TARGET SCORE:"}
+              </span>
+              <span style={{ color: gameMode === "GALLERY" ? "var(--neon-yellow)" : "var(--neon-cyan)" }}>{playerScore}</span>
             </div>
             <div className="stat-item">
-              <span>DRONE KILLS:</span>
-              <span>{droneKills} / 5</span>
+              <span>{gameMode === "ARENA" ? "DRONE KILLS:" : "RECORD RECORD:"}</span>
+              <span style={{ color: gameMode === "GALLERY" ? "var(--neon-yellow)" : "var(--neon-cyan)" }}>
+                {gameMode === "ARENA" ? `${droneKills} / 5` : `${highScore}`}
+              </span>
             </div>
             <div className="stat-item ammo-item">
               <span>BLASTER CORE:</span>
-              <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+              <span style={{ display: "flex", alignItems: "center", gap: "4px", color: gameMode === "GALLERY" ? "var(--neon-yellow)" : "var(--neon-cyan)", textShadow: gameMode === "GALLERY" ? "0 0 5px var(--neon-yellow)" : "0 0 5px var(--neon-cyan)" }}>
                 <Target size={12} /> READY
               </span>
             </div>

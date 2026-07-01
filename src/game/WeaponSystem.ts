@@ -89,8 +89,10 @@ export class WeaponSystem {
     deltaTime: number,
     onPlayerHit: (damage: number) => void,
     onEnemyHit: (damage: number) => void,
+    onTargetHit: (index: number) => void,
     playerPosition: THREE.Vector3,
-    enemyBoundingBox: THREE.Box3 | null
+    enemyBoundingBox: THREE.Box3 | null,
+    targetBoxes: THREE.Box3[]
   ) {
     // 1. Update Projectiles
     for (let i = this.projectiles.length - 1; i >= 0; i--) {
@@ -146,7 +148,22 @@ export class WeaponSystem {
         }
       }
 
-      // D. Out of bounds check (clean up stray bullets)
+      // D. Collision with Targets (if player projectile in Shooting Gallery)
+      if (proj.isPlayerOwned && targetBoxes.length > 0) {
+        for (let j = 0; j < targetBoxes.length; j++) {
+          if (targetBoxes[j].containsPoint(proj.mesh.position)) {
+            onTargetHit(j);
+            sounds.playEnemyDamageBeep();
+            this.createExplosionSparks(proj.mesh.position, 0xffaa00); // Orange glowing sparks
+            this.destroyProjectile(i);
+            hit = true;
+            break;
+          }
+        }
+        if (hit) continue;
+      }
+
+      // E. Out of bounds check (clean up stray bullets)
       if (prevPosition.lengthSq() > 3000) {
         this.destroyProjectile(i);
       }

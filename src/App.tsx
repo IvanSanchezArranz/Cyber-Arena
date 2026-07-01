@@ -15,7 +15,7 @@ export const App: React.FC = () => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
 
-  // game state
+  // game state initialized to dual mode defaults
   const [uiState, setUiState] = useState<GameUIState>({
     playerHealth: 100,
     playerShield: 100,
@@ -23,11 +23,15 @@ export const App: React.FC = () => {
     enemyHealth: 100,
     enemyState: "PATROL",
     gameStatus: "START",
+    gameMode: "ARENA",
+    timeLeft: 60.0,
+    highScore: 0,
     droneKills: 0,
     playerX: 0,
     playerZ: 25,
     enemyX: 0,
     enemyZ: -25,
+    targetsPos: [],
   });
 
   // Handle escape key to pause/resume
@@ -94,15 +98,17 @@ export const App: React.FC = () => {
         />
       )}
 
-      {/* Holographic Menus (Start, Game Over, Victory, Pause) */}
+      {/* Holographic Menus (Start, Game Over, Victory, Pause, Timeout) */}
       {isLoaded && (
         <GameMenu
           gameStatus={uiState.gameStatus}
-          onStart={() => gameManagerRef.current?.startGame()}
+          onStart={(mode) => gameManagerRef.current?.startGame(mode)}
           onResume={() => gameManagerRef.current?.resumeGame()}
-          onRestart={() => gameManagerRef.current?.restartGame()}
+          onRestart={(mode) => gameManagerRef.current?.restartGame(mode)}
           score={uiState.playerScore}
           droneKills={uiState.droneKills}
+          gameMode={uiState.gameMode}
+          highScore={uiState.highScore}
         />
       )}
 
