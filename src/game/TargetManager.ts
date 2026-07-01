@@ -47,7 +47,8 @@ export class TargetManager {
       const wobble = Math.sin(Date.now() * 0.005 + i) * 0.05;
       t.mesh.rotation.y = wobble;
 
-      // Update collision bounding box
+      // Ensure world matrices are fully recalculated to match this frame's new position
+      t.mesh.updateMatrixWorld(true);
       t.box.setFromObject(t.mesh);
 
       // Bounce/Reverse direction if target hits horizontal boundary walls (X = -20 to +20)

@@ -150,8 +150,11 @@ export class WeaponSystem {
 
       // D. Collision with Targets (if player projectile in Shooting Gallery)
       if (proj.isPlayerOwned && targetBoxes.length > 0) {
+        // Compute projectile bounding box to prevent fast laser tunneling
+        const projBox = new THREE.Box3().setFromObject(proj.mesh);
+        
         for (let j = 0; j < targetBoxes.length; j++) {
-          if (targetBoxes[j].containsPoint(proj.mesh.position)) {
+          if (projBox.intersectsBox(targetBoxes[j])) {
             onTargetHit(j);
             sounds.playEnemyDamageBeep();
             this.createExplosionSparks(proj.mesh.position, 0xffaa00); // Orange glowing sparks

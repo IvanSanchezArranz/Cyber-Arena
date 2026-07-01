@@ -70,6 +70,88 @@ export class SceneBuilder {
     this.createGalleryFloor();
     this.createBoundaryWalls(0x42381f, 0xffaa00); // Yellow/Orange glowing range tunnel
     this.createGalleryRangeWall();
+    this.createGalleryBooth();
+    this.createGalleryRails();
+  }
+
+  private createGalleryBooth() {
+    // 1. Shooting Bench Counter (Right in front of player at Z = 1.5, Y = 0.9m)
+    const benchGeo = new THREE.BoxGeometry(3.5, 0.9, 0.8);
+    const benchMat = new THREE.MeshStandardMaterial({
+      color: 0x1f1910, // Dark copper/carbon
+      roughness: 0.6,
+      metalness: 0.7
+    });
+    const bench = new THREE.Mesh(benchGeo, benchMat);
+    bench.position.set(0, 0.45, 1.5);
+    bench.receiveShadow = true;
+    bench.castShadow = true;
+    this.environmentGroup.add(bench);
+
+    // 2. Side Stall Divider Panels (X = -1.8m and X = 1.8m)
+    const dividerGeo = new THREE.BoxGeometry(0.08, 2.5, 3.0);
+    const dividerMat = new THREE.MeshStandardMaterial({
+      color: 0x0c0f1d,
+      roughness: 0.2,
+      metalness: 0.9
+    });
+
+    const leftDivider = new THREE.Mesh(dividerGeo, dividerMat);
+    leftDivider.position.set(-1.8, 1.25, 1.5);
+    leftDivider.castShadow = true;
+    leftDivider.receiveShadow = true;
+    this.environmentGroup.add(leftDivider);
+
+    const rightDivider = leftDivider.clone();
+    rightDivider.position.set(1.8, 1.25, 1.5);
+    this.environmentGroup.add(rightDivider);
+
+    // 3. Neon indicator strip on dividers
+    const trimGeo = new THREE.BoxGeometry(0.1, 0.05, 3.0);
+    const trimMat = new THREE.MeshBasicMaterial({ color: 0xffaa00 });
+    const trimL = new THREE.Mesh(trimGeo, trimMat);
+    trimL.position.set(-1.78, 2.45, 1.5);
+    this.environmentGroup.add(trimL);
+    const trimR = trimL.clone();
+    trimR.position.set(1.78, 2.45, 1.5);
+    this.environmentGroup.add(trimR);
+  }
+
+  private createGalleryRails() {
+    // 3 Physical Steel Slide Rails (Tracks) extending across the room (X = -20 to 20)
+    const railGeo = new THREE.BoxGeometry(40, 0.08, 0.08);
+    const railMat = new THREE.MeshStandardMaterial({
+      color: 0x888899,
+      roughness: 0.1,
+      metalness: 0.9
+    });
+
+    const railsCoords = [
+      { z: -12, y: 1.5 },
+      { z: -22, y: 2.8 },
+      { z: -32, y: 4.2 }
+    ];
+
+    railsCoords.forEach((rc) => {
+      const railMesh = new THREE.Mesh(railGeo, railMat);
+      railMesh.position.set(0, rc.y, rc.z);
+      railMesh.castShadow = true;
+      railMesh.receiveShadow = true;
+      this.environmentGroup.add(railMesh);
+
+      // Support pillar posts on left/right edges of each rail
+      const supportGeo = new THREE.CylinderGeometry(0.08, 0.08, rc.y, 8);
+      const supportMat = new THREE.MeshStandardMaterial({ color: 0x33333d, metalness: 0.8 });
+      
+      const leftPost = new THREE.Mesh(supportGeo, supportMat);
+      leftPost.position.set(-20, rc.y / 2, rc.z);
+      leftPost.castShadow = true;
+      this.environmentGroup.add(leftPost);
+
+      const rightPost = leftPost.clone();
+      rightPost.position.set(20, rc.y / 2, rc.z);
+      this.environmentGroup.add(rightPost);
+    });
   }
 
   /* =========================================================================
