@@ -254,7 +254,7 @@ export class GameManager {
 
     // 3. Update Weapon Projectiles & Particles
     const targetsList = this.gameMode === "GALLERY" 
-      ? this.targetManager.targets.map(t => ({ uuid: t.mesh.uuid, box: t.box })) 
+      ? this.targetManager.targets.map(t => ({ uuid: t.mesh.uuid, position: t.mesh.position })) 
       : [];
     
     this.weaponSystem.update(

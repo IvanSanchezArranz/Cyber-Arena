@@ -92,7 +92,7 @@ export class WeaponSystem {
     onTargetHit: (uuid: string) => void,
     playerPosition: THREE.Vector3,
     enemyBoundingBox: THREE.Box3 | null,
-    targets: { uuid: string; box: THREE.Box3 }[]
+    targets: { uuid: string; position: THREE.Vector3 }[]
   ) {
     // 1. Update Projectiles
     for (let i = this.projectiles.length - 1; i >= 0; i--) {
@@ -148,13 +148,14 @@ export class WeaponSystem {
         }
       }
 
-      // D. Collision with Targets (if player projectile in Shooting Gallery)
+      // D. Collision with Targets (if player projectile in Shooting Gallery, distance-based)
       if (proj.isPlayerOwned && targets.length > 0) {
-        // Compute projectile bounding box to prevent fast laser tunneling
-        const projBox = new THREE.Box3().setFromObject(proj.mesh);
-        
         for (let j = 0; j < targets.length; j++) {
-          if (projBox.intersectsBox(targets[j].box)) {
+          const targetPos = targets[j].position;
+          const dist = proj.mesh.position.distanceTo(targetPos);
+
+          // If laser is close to target (within 1.15m: 0.55m orb radius + padding)
+          if (dist < 1.15) {
             onTargetHit(targets[j].uuid);
             sounds.playEnemyDamageBeep();
             this.createExplosionSparks(proj.mesh.position, 0xffaa00); // Orange glowing sparks
