@@ -5,6 +5,7 @@ interface GameMenuProps {
   onStart: (mode: "ARENA" | "GALLERY") => void;
   onResume: () => void;
   onRestart: (mode: "ARENA" | "GALLERY") => void;
+  onReturnToMenu: () => void;
   score: number;
   droneKills: number;
   gameMode: "ARENA" | "GALLERY";
@@ -16,6 +17,7 @@ export const GameMenu: React.FC<GameMenuProps> = ({
   onStart,
   onResume,
   onRestart,
+  onReturnToMenu,
   score,
   droneKills,
   gameMode,
@@ -113,8 +115,11 @@ export const GameMenu: React.FC<GameMenuProps> = ({
           <button className="cyber-button" style={{ marginBottom: "12px", width: "100%" }} onClick={onResume}>
             RESUME SIMULATION
           </button>
-          <button className="cyber-button" style={{ border: "1px solid rgba(255,255,255,0.2)", color: "#a0aec0", width: "100%" }} onClick={() => onRestart(gameMode)}>
+          <button className="cyber-button" style={{ marginBottom: "12px", border: "1px solid rgba(255,255,255,0.2)", color: "#a0aec0", width: "100%" }} onClick={() => onRestart(gameMode)}>
             ABORT & RESTART
+          </button>
+          <button className="cyber-button" style={{ border: "1px solid var(--border-cyan)", color: "var(--neon-cyan)", width: "100%" }} onClick={onReturnToMenu}>
+            RETURN TO MAIN MENU
           </button>
         </div>
       )}
@@ -141,8 +146,11 @@ export const GameMenu: React.FC<GameMenuProps> = ({
           <button className="cyber-button" style={{ borderColor: "#ff3333", color: "#ff3333", width: "100%", marginBottom: "12px" }} onClick={() => onRestart("ARENA")}>
             RE-INJECT LOGINS (ARENA)
           </button>
-          <button className="cyber-button" style={{ border: "1px solid rgba(255,255,255,0.15)", color: "#e2e8f0", width: "100%" }} onClick={() => onRestart("GALLERY")}>
+          <button className="cyber-button" style={{ border: "1px solid rgba(255,255,255,0.15)", color: "#e2e8f0", width: "100%", marginBottom: "12px" }} onClick={() => onRestart("GALLERY")}>
             SWITCH TO AIM RANGE (GALLERY)
+          </button>
+          <button className="cyber-button" style={{ border: "1px solid var(--border-cyan)", color: "var(--neon-cyan)", width: "100%" }} onClick={onReturnToMenu}>
+            RETURN TO MAIN MENU
           </button>
         </div>
       )}
@@ -169,8 +177,11 @@ export const GameMenu: React.FC<GameMenuProps> = ({
           <button className="cyber-button" style={{ borderColor: "var(--neon-yellow)", color: "var(--neon-yellow)", width: "100%", marginBottom: "12px" }} onClick={() => onRestart("ARENA")}>
             RUN SIMULATION AGAIN
           </button>
-          <button className="cyber-button" style={{ border: "1px solid rgba(255,255,255,0.15)", color: "#e2e8f0", width: "100%" }} onClick={() => onRestart("GALLERY")}>
+          <button className="cyber-button" style={{ border: "1px solid rgba(255,255,255,0.15)", color: "#e2e8f0", width: "100%", marginBottom: "12px" }} onClick={() => onRestart("GALLERY")}>
             SWITCH TO AIM RANGE (GALLERY)
+          </button>
+          <button className="cyber-button" style={{ border: "1px solid var(--border-cyan)", color: "var(--neon-cyan)", width: "100%" }} onClick={onReturnToMenu}>
+            RETURN TO MAIN MENU
           </button>
         </div>
       )}
@@ -202,8 +213,11 @@ export const GameMenu: React.FC<GameMenuProps> = ({
           <button className="cyber-button" style={{ borderColor: "var(--neon-yellow)", color: "var(--neon-yellow)", width: "100%", marginBottom: "12px" }} onClick={() => onRestart("GALLERY")}>
             REPLAY AIM TRAINING
           </button>
-          <button className="cyber-button" style={{ border: "1px solid rgba(255,255,255,0.15)", color: "#e2e8f0", width: "100%" }} onClick={() => onRestart("ARENA")}>
+          <button className="cyber-button" style={{ borderColor: "var(--neon-cyan)", color: "var(--neon-cyan)", width: "100%", marginBottom: "12px" }} onClick={() => onRestart("ARENA")}>
             LAUNCH COMBAT ARENA
+          </button>
+          <button className="cyber-button" style={{ border: "1px solid var(--border-cyan)", color: "var(--neon-cyan)", width: "100%" }} onClick={onReturnToMenu}>
+            RETURN TO MAIN MENU
           </button>
         </div>
       )}

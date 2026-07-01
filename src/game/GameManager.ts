@@ -102,7 +102,7 @@ export class GameManager {
   private buildWorld() {
     // 1. SceneBuilder
     this.sceneBuilder = new SceneBuilder(this.scene);
-    this.sceneBuilder.build();
+    this.sceneBuilder.build("ARENA"); // Build default Arena environment during initial load
 
     // 2. WeaponSystem
     this.weaponSystem = new WeaponSystem(this.scene, this.sceneBuilder.getObstacles());
@@ -135,17 +135,24 @@ export class GameManager {
     this.clock.getDelta(); // Reset clock delta
     this.isLoopRunning = true;
 
+    // Dynamically compile and build the chosen 3D environment layout
+    this.sceneBuilder.build(mode);
+
     if (this.gameMode === "GALLERY") {
       this.timeLeft = 60.0; // 60s practice countdown
       this.player.score = 0;
       this.targetManager.clearAll();
       // Remove enemy drone from scene
       this.scene.remove(this.enemy.mesh);
+      // Reposition player at start of the range looking down the tunnel
+      this.player.position.set(0, 1.8, 30);
+      this.player.rotation.set(0, Math.PI, 0, "YXZ");
     } else {
       // Re-add enemy drone if we are in Arena mode
-      if (!this.enemy.isDead) {
-        this.scene.add(this.enemy.mesh);
-      }
+      this.enemy.respawn(1.0);
+      // Reposition player at standard arena coordinates
+      this.player.position.set(0, 1.8, 25);
+      this.player.rotation.set(0, Math.PI, 0, "YXZ");
     }
 
     this.renderer.setAnimationLoop(this.tick);
@@ -177,21 +184,31 @@ export class GameManager {
     this.weaponSystem.clearAll();
     this.targetManager.clearAll();
     
+    // Dynamically compile and build the chosen 3D environment layout
+    this.sceneBuilder.build(mode);
+
     if (this.gameMode === "ARENA") {
-      if (this.enemy.isDead) {
-        this.enemy.respawn(this.levelMultiplier);
-      } else {
-        this.enemy.position.set(0, 2.5, -25);
-        this.enemy.health = 100;
-        this.enemy.maxHealth = 100;
-        this.enemy.state = EnemyState.PATROL;
-      }
+      this.enemy.respawn(this.levelMultiplier);
     } else {
       this.enemy.isDead = true;
       this.scene.remove(this.enemy.mesh);
     }
 
     this.startGame(mode);
+  }
+
+  public returnToMenu() {
+    this.gameStatus = "START";
+    this.isLoopRunning = false;
+    this.renderer.setAnimationLoop(null);
+    sounds.stopAmbientHum();
+    this.targetManager.clearAll();
+    this.weaponSystem.clearAll();
+    this.player.reset();
+    
+    // Rebuild default beautiful lobby arena on starting screen
+    this.sceneBuilder.build("ARENA");
+    this.syncUI();
   }
 
   private tick = () => {

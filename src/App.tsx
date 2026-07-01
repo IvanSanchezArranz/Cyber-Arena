@@ -105,6 +105,7 @@ export const App: React.FC = () => {
           onStart={(mode) => gameManagerRef.current?.startGame(mode)}
           onResume={() => gameManagerRef.current?.resumeGame()}
           onRestart={(mode) => gameManagerRef.current?.restartGame(mode)}
+          onReturnToMenu={() => gameManagerRef.current?.returnToMenu()}
           score={uiState.playerScore}
           droneKills={uiState.droneKills}
           gameMode={uiState.gameMode}
