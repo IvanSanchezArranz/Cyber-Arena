@@ -288,8 +288,11 @@ export class PlayerController {
     muzzlePosition.add(right.multiplyScalar(0.35));
     muzzlePosition.y -= 0.25;
 
-    // Direct shot vector pointing straight from crosshair
-    const shootDirection = forward.clone().normalize();
+    // Calculate the convergence point 40 meters in front of the camera (where the crosshair reticle is aiming)
+    const aimTargetPoint = this.camera.position.clone().add(forward.clone().multiplyScalar(40));
+
+    // Direct shot vector from the muzzle pointing towards the crosshair convergence point
+    const shootDirection = new THREE.Vector3().subVectors(aimTargetPoint, muzzlePosition).normalize();
 
     this.weaponSystem.fire(muzzlePosition, shootDirection, true);
 
